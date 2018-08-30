@@ -1,0 +1,6 @@
+[package]
+name = "asyncio"
+version = "0.1.0"
+authors = ["Dmitrii Goriunov <goriunovd@gmail.com>"]
+
+[dependencies]
