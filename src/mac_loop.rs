@@ -17,7 +17,7 @@ mod ffi {
     #[derive(Debug)]
     #[repr(C)]
     pub struct kevent {
-        pub ident: i32,          // 8
+        pub ident: u32,          // 8
         pub filter: EventFilter, // 2
         pub flags: u16,          // EventFlag,    // 2
         pub fflags: u32,         // FilterFlag,  // 4
@@ -66,12 +66,12 @@ impl EventLoop {
 
     pub fn add_event(&mut self, ident: RawFd, id: usize) {
         let event = KEvent {
-            ident: ident as i32,              // 8
-            filter: EventFilter::EVFILT_READ, // 2
-            flags: EventFlag::EV_ADD,         // 2
-            fflags: 0,                        // 4
-            data: 0,                          // 8
-            udata: id,                        // 8
+            ident: ident as u32,                                                    // 8
+            filter: EventFilter::EVFILT_READ,                                       // 2
+            flags: EventFlag::EV_ADD | EventFlag::EV_CLEAR | EventFlag::EV_RECEIPT, // 2
+            fflags: 0,                                                              // 4
+            data: 0,                                                                // 8
+            udata: id + 1,                                                          // 8
         };
 
         // need to create array of events
