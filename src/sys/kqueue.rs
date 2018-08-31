@@ -151,7 +151,7 @@ pub fn kevent(
             changelist.as_ptr(),
             changelist.len() as i32,
             eventlist.as_mut_ptr(),
-            changelist.len() as i32,
+            10 as i32,
             &timeout, // this should be set to timout
         )
     };
