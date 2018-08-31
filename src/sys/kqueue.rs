@@ -16,7 +16,7 @@ mod ffi {
     #[derive(Debug)]
     #[repr(C)]
     pub struct kevent {
-        pub ident: usize,        // 8
+        pub ident: i32,          // 8
         pub filter: EventFilter, // 2
         pub flags: u16,          // EventFlag,    // 2
         pub fflags: u32,         // FilterFlag,  // 4
@@ -145,29 +145,14 @@ pub fn kevent(
         tv_nsec: ((timeout_ms % 1000) * 1_000_000) as i64,
     };
 
-    if changelist.len() == 0 {
-        let res = unsafe {
-            ffi::kevent(
-                kq,
-                ptr::null(),
-                0,
-                eventlist.as_mut_ptr(),
-                eventlist.len() as i32,
-                ptr::null_mut(),
-            )
-        };
-
-        return res as usize;
-    }
-
     let res = unsafe {
         ffi::kevent(
             kq,
             changelist.as_ptr(),
             changelist.len() as i32,
             eventlist.as_mut_ptr(),
-            eventlist.len() as i32,
-            ptr::null_mut(),
+            changelist.len() as i32,
+            &timeout, // this should be set to timout
         )
     };
 
@@ -177,13 +162,13 @@ pub fn kevent(
 #[inline]
 pub fn ev_set(
     ev: &mut KEvent,
-    ident: usize,
+    ident: i32,
     filter: EventFilter,
     flags: u16,  // EventFlag,
     fflags: u32, // FilterFlag,
     udata: usize,
 ) {
-    ev.ident = ident as usize;
+    ev.ident = ident as i32;
     ev.filter = filter;
     ev.flags = flags;
     ev.fflags = fflags;

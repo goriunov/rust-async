@@ -21,7 +21,7 @@ fn main() {
     //     data: count,
     // };
 
-    let mut event_loop = EventLoop::new(1000);
+    let mut event_loop = EventLoop::new(100);
 
     event_loop.add_event(listener.as_raw_fd(), count);
 
