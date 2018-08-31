@@ -65,7 +65,7 @@ impl EventLoop {
     }
 
     pub fn add_event(&mut self, ident: RawFd, id: usize) {
-        let mut event = KEvent {
+        let event = KEvent {
             ident: ident as i32,              // 8
             filter: EventFilter::EVFILT_READ, // 2
             flags: EventFlag::EV_ADD,         // 2
@@ -85,18 +85,9 @@ impl EventLoop {
         //     0,
         // );
 
-        self.change_events.insert(id, event);
+        // self.change_events.insert(id, event);
 
-        unsafe {
-            ffi::kevent(
-                self.event_loop,
-                self.change_events.as_ptr(),
-                self.change_events.len() as i32,
-                self.change_events.as_mut_ptr(),
-                self.change_events.len() as i32,
-                ptr::null(),
-            )
-        };
+        unsafe { ffi::kevent(self.event_loop, &event, 1, ptr::null_mut(), 0, ptr::null()) };
     }
 
     //     // pub fn remove_event(&self, event: RawFd) {
