@@ -48,7 +48,7 @@ impl EventLoop {
     //     // }
 
     pub fn fetch_events(&mut self) {
-        let call_events = kevent(self.event_loop, &self.change_events, &mut self.events, 0);
+        let call_events = kevent(self.event_loop, &self.change_events, &mut self.events, -1);
         unsafe { self.events.set_len(call_events as usize) };
     }
 }

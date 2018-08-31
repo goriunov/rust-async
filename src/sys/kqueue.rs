@@ -40,7 +40,7 @@ mod ffi {
             nchanges: i32,
             eventlist: *mut kevent,
             nevents: i32,
-            timeout: *const timespec,
+            timeout: isize,
         ) -> i32;
     }
 }
@@ -136,7 +136,7 @@ pub fn kevent(
     kq: RawFd,
     changelist: &[KEvent],
     eventlist: &mut [KEvent],
-    timeout_ms: usize,
+    timeout_ms: isize,
 ) -> usize {
     // Convert ms to timespec
     let timeout = timespec {
@@ -151,7 +151,7 @@ pub fn kevent(
             changelist.len() as i32,
             eventlist.as_mut_ptr(),
             eventlist.len() as i32,
-            &timeout as *const timespec,
+            timeout_ms,
         )
     };
 
