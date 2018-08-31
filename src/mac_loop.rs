@@ -32,12 +32,14 @@ impl EventLoop {
             &mut event,
             ident,
             EventFilter::EVFILT_READ,
-            EventFlag::EV_ADD | EventFlag::EV_ENABLE,
+            EventFlag::EV_ADD,
             0,
             0,
         );
 
         self.change_events.insert(id, event);
+
+        kevent(self.event_loop, &self.change_events, &mut self.events, 0);
     }
 
     //     // pub fn remove_event(&self, event: RawFd) {
@@ -49,7 +51,7 @@ impl EventLoop {
     //     // }
 
     pub fn fetch_events(&mut self) {
-        let call_events = kevent(self.event_loop, &self.change_events, &mut self.events, 0);
+        let call_events = kevent(self.event_loop, &[], &mut self.events, 0);
         unsafe { self.events.set_len(call_events as usize) };
     }
 }
