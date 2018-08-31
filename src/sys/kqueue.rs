@@ -79,8 +79,20 @@ pub enum FilterFlag {
 //     pub data: u64,
 // }
 
-#[derive(Debug)]
+#[cfg(not(target_arch = "x86_64"))]
 #[repr(C)]
+pub struct KEvent {
+    pub ident: i32,
+    pub filter: EventFilter,
+    pub flags: EventFlag,
+    pub fflags: FilterFlag,
+    pub data: u64,
+    // pub udata: *mut c_void,
+}
+
+#[derive(Debug)]
+#[cfg(target_arch = "x86_64")]
+#[repr(C, packed)]
 pub struct KEvent {
     pub ident: i32,
     pub filter: EventFilter,
@@ -114,7 +126,7 @@ pub fn kqueue() -> i32 {
 }
 
 pub fn kqueue1(flags: i32) -> i32 {
-    unsafe { __glibc::kqueue1(flags) }
+    unsafe { __glibc::kqueue() }
 }
 
 pub fn kevent(
