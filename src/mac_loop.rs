@@ -85,9 +85,9 @@ impl EventLoop {
         //     0,
         // );
 
-        // self.change_events.insert(id, event);
+        self.change_events.insert(id, event);
 
-        unsafe { ffi::kevent(self.event_loop, &event, 1, ptr::null_mut(), 0, ptr::null()) };
+        // unsafe { ffi::kevent(self.event_loop, &event, 1, ptr::null_mut(), 0, ptr::null()) };
     }
 
     //     // pub fn remove_event(&self, event: RawFd) {
@@ -102,8 +102,8 @@ impl EventLoop {
         unsafe {
             let call_events = ffi::kevent(
                 self.event_loop,
-                ptr::null(),
-                0,
+                self.change_events.as_ptr(),
+                self.change_events.len() as i32,
                 self.events.as_mut_ptr(),
                 32,
                 ptr::null_mut(),
