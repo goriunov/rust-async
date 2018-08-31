@@ -37,6 +37,8 @@ impl EventLoop {
         );
 
         self.change_events.insert(id, event);
+
+        kevent(self.event_loop, &self.change_events, &mut self.events, 0);
     }
 
     //     // pub fn remove_event(&self, event: RawFd) {
