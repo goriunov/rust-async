@@ -1,4 +1,5 @@
 use std::os::unix::io::RawFd;
+use std::ptr;
 
 pub use self::ffi::kevent as KEvent;
 
@@ -40,7 +41,7 @@ mod ffi {
             nchanges: i32,
             eventlist: *mut kevent,
             nevents: i32,
-            timeout: isize,
+            timeout: *const timespec,
         ) -> i32;
     }
 }
@@ -136,7 +137,7 @@ pub fn kevent(
     kq: RawFd,
     changelist: &[KEvent],
     eventlist: &mut [KEvent],
-    timeout_ms: isize,
+    timeout_ms: usize,
 ) -> usize {
     // Convert ms to timespec
     let timeout = timespec {
@@ -151,7 +152,7 @@ pub fn kevent(
             changelist.len() as i32,
             eventlist.as_mut_ptr(),
             eventlist.len() as i32,
-            timeout_ms,
+            ptr::null()
         )
     };
 
