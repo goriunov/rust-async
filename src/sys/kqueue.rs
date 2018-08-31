@@ -1,50 +1,50 @@
-use std::os::unix::io::RawFd;
-use std::ptr;
+// use std::os::unix::io::RawFd;
+// use std::ptr;
 
-pub use self::ffi::kevent as KEvent;
+// pub use self::ffi::kevent as KEvent;
 
-#[derive(Debug)]
-pub struct timespec {
-    pub tv_sec: i64,
-    pub tv_nsec: i64,
-}
+// #[derive(Debug)]
+// pub struct timespec {
+//     pub tv_sec: i64,
+//     pub tv_nsec: i64,
+// }
 
-mod ffi {
-    use super::timespec;
-    use super::{EventFilter, EventFlag, FilterFlag};
+// mod ffi {
+//     use super::timespec;
+//     use super::EventFilter;
 
-    #[derive(Debug)]
-    #[repr(C)]
-    pub struct kevent {
-        pub ident: i32,          // 8
-        pub filter: EventFilter, // 2
-        pub flags: u16,          // EventFlag,    // 2
-        pub fflags: u32,         // FilterFlag,  // 4
-        pub data: isize,         // 8
-        pub udata: usize,        // 8
-    }
+//     #[derive(Debug)]
+//     #[repr(C)]
+//     pub struct kevent {
+//         pub ident: i32,          // 8
+//         pub filter: EventFilter, // 2
+//         pub flags: u16,          // EventFlag,    // 2
+//         pub fflags: u32,         // FilterFlag,  // 4
+//         pub data: isize,         // 8
+//         pub udata: usize,        // 8
+//     }
 
-    // impl kevent {
-    //     pub fn ev_set(){
+//     // impl kevent {
+//     //     pub fn ev_set(){
 
-    //     }
-    // }
+//     //     }
+//     // }
 
-    // Bug in rustc, cannot determine that kevent is #[repr(C)]
-    #[allow(improper_ctypes)]
-    extern "C" {
-        pub fn kqueue() -> i32;
+//     // Bug in rustc, cannot determine that kevent is #[repr(C)]
+//     #[allow(improper_ctypes)]
+//     extern "C" {
+//         pub fn kqueue() -> i32;
 
-        pub fn kevent(
-            kq: i32,
-            changelist: *const kevent,
-            nchanges: i32,
-            eventlist: *mut kevent,
-            nevents: i32,
-            timeout: *const timespec,
-        ) -> i32;
-    }
-}
+//         pub fn kevent(
+//             kq: i32,
+//             changelist: *const kevent,
+//             nchanges: i32,
+//             eventlist: *mut kevent,
+//             nevents: i32,
+//             timeout: *const timespec,
+//         ) -> i32;
+//     }
+// }
 
 #[repr(i16)]
 #[derive(PartialEq, Debug)]
@@ -129,49 +129,49 @@ impl FilterFlag {
     pub const NOTE_CHILD: u32 = 0x00000004;
 }
 
-pub fn kqueue() -> RawFd {
-    unsafe { ffi::kqueue() }
-}
+// pub fn kqueue() -> RawFd {
+//     unsafe { ffi::kqueue() }
+// }
 
-pub fn kevent(
-    kq: RawFd,
-    changelist: &[KEvent],
-    eventlist: &mut [KEvent],
-    timeout_ms: usize,
-) -> usize {
-    // Convert ms to timespec
-    let timeout = timespec {
-        tv_sec: (timeout_ms / 1000) as i64,
-        tv_nsec: ((timeout_ms % 1000) * 1_000_000) as i64,
-    };
+// pub fn kevent(
+//     kq: RawFd,
+//     changelist: &[KEvent],
+//     eventlist: &mut [KEvent],
+//     timeout_ms: usize,
+// ) -> usize {
+//     // Convert ms to timespec
+//     let timeout = timespec {
+//         tv_sec: (timeout_ms / 1000) as i64,
+//         tv_nsec: ((timeout_ms % 1000) * 1_000_000) as i64,
+//     };
 
-    let res = unsafe {
-        ffi::kevent(
-            kq,
-            changelist.as_ptr(),
-            changelist.len() as i32,
-            eventlist.as_mut_ptr(),
-            10 as i32,
-            &timeout, // this should be set to timout
-        )
-    };
+//     let res = unsafe {
+//         ffi::kevent(
+//             kq,
+//             changelist.as_ptr(),
+//             changelist.len() as i32,
+//             eventlist.as_mut_ptr(),
+//             10 as i32,
+//             &timeout, // this should be set to timout
+//         )
+//     };
 
-    return res as usize;
-}
+//     return res as usize;
+// }
 
-#[inline]
-pub fn ev_set(
-    ev: &mut KEvent,
-    ident: i32,
-    filter: EventFilter,
-    flags: u16,  // EventFlag,
-    fflags: u32, // FilterFlag,
-    udata: usize,
-) {
-    ev.ident = ident as i32;
-    ev.filter = filter;
-    ev.flags = flags;
-    ev.fflags = fflags;
-    ev.data = 0;
-    ev.udata = udata;
-}
+// #[inline]
+// pub fn ev_set(
+//     ev: &mut KEvent,
+//     ident: i32,
+//     filter: EventFilter,
+//     flags: u16,  // EventFlag,
+//     fflags: u32, // FilterFlag,
+//     udata: usize,
+// ) {
+//     ev.ident = ident as i32;
+//     ev.filter = filter;
+//     ev.flags = flags;
+//     ev.fflags = fflags;
+//     ev.data = 0;
+//     ev.udata = udata;
+// }
