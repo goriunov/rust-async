@@ -105,9 +105,11 @@ impl EventLoop {
                 ptr::null(),
                 0,
                 self.events.as_mut_ptr(),
-                self.events.capacity() as i32,
+                32,
                 ptr::null_mut(),
             );
+
+            println!("{}", call_events);
 
             self.events.set_len(call_events as usize);
         };
