@@ -145,6 +145,21 @@ pub fn kevent(
         tv_nsec: ((timeout_ms % 1000) * 1_000_000) as i64,
     };
 
+    if changelist.len() == 0 {
+        let res = unsafe {
+            ffi::kevent(
+                kq,
+                ptr::null(),
+                0,
+                eventlist.as_mut_ptr(),
+                eventlist.len() as i32,
+                ptr::null_mut(),
+            )
+        };
+
+        return res as usize;
+    }
+
     let res = unsafe {
         ffi::kevent(
             kq,
@@ -152,7 +167,7 @@ pub fn kevent(
             changelist.len() as i32,
             eventlist.as_mut_ptr(),
             eventlist.len() as i32,
-            ptr::null()
+            ptr::null_mut(),
         )
     };
 
