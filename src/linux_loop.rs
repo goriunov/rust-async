@@ -21,7 +21,7 @@ impl EventLoop {
     }
 
     pub fn remove_event(&self, event: RawFd, conf: epoll_event) {
-        epoll_ctl(self.event_loop, EPOLL_CTL_DEL, event, &conf);
+        epoll_ctl(self.event_loop,  EPOLL_CTL_DEL, event, &conf);
     }
 
     pub fn modify_event(&self, event: RawFd, conf: epoll_event) {

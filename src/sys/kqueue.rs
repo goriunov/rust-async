@@ -1,3 +1,5 @@
+// need to modify  events (too annoing)
+#[derive(Debug)]
 #[repr(C)]
 pub enum EventFilter {
     EVFILT_READ = -1,
@@ -15,6 +17,7 @@ pub enum EventFilter {
     EVFILT_SYSCOUNT = 12,
 }
 
+#[derive(Debug)]
 #[repr(C)]
 pub enum EventFlag {
     EV_ADD = 0x0001,
@@ -34,6 +37,7 @@ pub enum EventFlag {
     EV_ERROR = 0x4000,
 }
 
+#[derive(Debug)]
 #[repr(C)]
 pub enum FilterFlag {
     NOTE_FFNOP = 0x00000000,
@@ -75,8 +79,9 @@ pub enum FilterFlag {
 //     pub data: u64,
 // }
 
+#[derive(Debug)]
 #[repr(C)]
-pub struct kevent {
+pub struct KEvent {
     pub ident: i32,
     pub filter: EventFilter,
     pub flags: EventFlag,
@@ -93,9 +98,9 @@ mod __glibc {
 
         pub fn kevent(
             kq: i32,
-            changelist: kevent,
+            changelist: *mut KEvent,
             nchanges: u32,
-            eventlist: kevent,
+            eventlist: *mut KEvent,
             nevents: u32,
             timeout: i32,
         ) -> i32;
@@ -104,21 +109,32 @@ mod __glibc {
     }
 }
 
-pub fn kqueue() {
-    unsafe { __glibc::kqueue() };
+pub fn kqueue() -> i32 {
+    unsafe { __glibc::kqueue() }
 }
 
-pub fn kqueue1(flags: i32) {
-    unsafe { __glibc::kqueue1(flags) };
+pub fn kqueue1(flags: i32) -> i32 {
+    unsafe { __glibc::kqueue1(flags) }
 }
 
 pub fn kevent(
     kq: i32,
-    changelist: kevent,
+    changelist: &mut [KEvent],
     nchanges: u32,
-    eventlist: kevent,
+    eventlist: &mut [KEvent],
     nevents: u32,
     timeout: i32,
-) {
-    unsafe { __glibc::kevent(kq, changelist, nchanges, eventlist, nevents, timeout) };
+) -> i32 {
+    unsafe {
+        __glibc::kevent(
+            kq,
+            changelist.as_mut_ptr(),
+            nchanges,
+            eventlist.as_mut_ptr(),
+            nevents,
+            timeout,
+        )
+    }
 }
+
+// pub fn ev_set(items: &mut Vec<kevent>) {}
