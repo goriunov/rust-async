@@ -20,7 +20,7 @@ impl EventLoop {
 
     pub fn add_event(&mut self, ident: RawFd, id: usize) {
         let mut event = KEvent {
-            ident: 0,                         // 8
+            ident: ident as usize,            // 8
             filter: EventFilter::EVFILT_READ, // 2
             flags: EventFlag::EV_ADD,         // 2
             fflags: FilterFlag::NOTE_FFCOPY,  // 4
