@@ -28,7 +28,8 @@ pub struct epoll_event {
 
 // external
 mod __glibc {
-    use epoll_event;
+    // use epoll event
+    use sys::epoll::epoll_event;
 
     extern "C" {
         pub fn epoll_create1(flags: u32) -> i32;
@@ -38,9 +39,9 @@ mod __glibc {
     }
 }
 
-pub fn epoll_create() -> i32 {
-    unsafe { __glibc::epoll_create1(0) }
-}
+// pub fn epoll_create() -> i32 {
+//     unsafe { __glibc::epoll_create1(0) }
+// }
 
 pub fn epoll_create1(flags: u32) -> i32 {
     unsafe { __glibc::epoll_create1(flags) }
@@ -52,34 +53,4 @@ pub fn epoll_ctl(epfd: i32, op: u32, fd: i32, event: &epoll_event) -> i32 {
 
 pub fn epoll_wait(epfd: i32, events: &mut [epoll_event], maxevents: i32, timeout: i32) -> i32 {
     unsafe { __glibc::epoll_wait(epfd, events.as_mut_ptr(), maxevents, timeout) }
-}
-
-use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::os::unix::io::{AsRawFd, FromRawFd, IntoRawFd, RawFd};
-
-pub struct EventLoop {
-    pub events: Vec<epoll_event>,
-    event_loop: i32,
-}
-
-impl EventLoop {
-    pub fn new(capacity: usize) -> EventLoop {
-        EventLoop {
-            events: Vec::with_capacity(capacity),
-            event_loop: epoll_create(),
-        }
-    }
-
-    pub fn add_listener_event(&mut self, listener: &TcpListener, conf: epoll_event) {
-        epoll_ctl(self.event_loop, EPOLL_CTL_ADD, listener.as_raw_fd(), &conf);
-    }
-
-    pub fn add_socket_event(&self, sock: &TcpStream, conf: epoll_event) {
-        epoll_ctl(self.event_loop, EPOLL_CTL_ADD, sock.as_raw_fd(), &conf);
-    }
-
-    pub fn get_events(&mut self) {
-        let call_events = epoll_wait(self.event_loop, &mut self.events, 32, -1);
-        unsafe { self.events.set_len(call_events as usize) };
-    }
 }
