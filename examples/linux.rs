@@ -50,7 +50,7 @@ fn main() {
                     Ok(0) => {
                         continue;
                     }
-                    Ok(n) => {
+                    Ok(_n) => {
                         socket.write(&buf).expect("Could not write");
                         // write back
                     }

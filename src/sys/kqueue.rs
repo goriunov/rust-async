@@ -1,6 +1,52 @@
-// need to modify  events (too annoing)
+use std::os::unix::io::RawFd;
+
+pub use self::ffi::kevent as KEvent;
+
 #[derive(Debug)]
-#[repr(C)]
+pub struct timespec {
+    pub tv_sec: i64,
+    pub tv_nsec: i64,
+}
+
+mod ffi {
+    use super::timespec;
+    use super::{EventFilter, EventFlag, FilterFlag};
+
+    #[derive(Debug)]
+    #[repr(C)]
+    pub struct kevent {
+        pub ident: usize,        // 8
+        pub filter: EventFilter, // 2
+        pub flags: u16,          // EventFlag,    // 2
+        pub fflags: u32,         // FilterFlag,  // 4
+        pub data: isize,         // 8
+        pub udata: usize,        // 8
+    }
+
+    // impl kevent {
+    //     pub fn ev_set(){
+
+    //     }
+    // }
+
+    // Bug in rustc, cannot determine that kevent is #[repr(C)]
+    #[allow(improper_ctypes)]
+    extern "C" {
+        pub fn kqueue() -> i32;
+
+        pub fn kevent(
+            kq: i32,
+            changelist: *const kevent,
+            nchanges: i32,
+            eventlist: *mut kevent,
+            nevents: i32,
+            timeout: *const timespec,
+        ) -> i32;
+    }
+}
+
+#[repr(i16)]
+#[derive(PartialEq, Debug)]
 pub enum EventFilter {
     EVFILT_READ = -1,
     EVFILT_WRITE = -2,
@@ -9,144 +55,122 @@ pub enum EventFilter {
     EVFILT_PROC = -5,
     EVFILT_SIGNAL = -6,
     EVFILT_TIMER = -7,
-    EVFILT_PROCDESC = -8,
+    EVFILT_MACHPORT = -8,
     EVFILT_FS = -9,
-    EVFILT_LIO = -10,
-    EVFILT_USER = -11,
-    EVFILT_SENDFILE = -12,
-    EVFILT_SYSCOUNT = 12,
+    EVFILT_USER = -10,
+    // -11: unused
+    EVFILT_VM = -12,
+    EVFILT_SYSCOUNT = 13,
 }
 
 #[derive(Debug)]
-#[repr(C)]
-pub enum EventFlag {
-    EV_ADD = 0x0001,
-    EV_DELETE = 0x0002,
-    EV_ENABLE = 0x0004,
-    EV_DISABLE = 0x0008,
-    EV_FORCEONESHOT = 0x0100,
-    EV_ONESHOT = 0x0010,
-    EV_CLEAR = 0x0020,
-    EV_RECEIPT = 0x0040,
-    EV_DISPATCH = 0x0080,
-    EV_SYSFLAGS = 0xF000,
-    EV_DROP = 0x1000,
-    EV_FLAG1 = 0x2000,
-    // EV_FLAG2 = 0x4000,
-    EV_EOF = 0x8000,
-    EV_ERROR = 0x4000,
+pub struct EventFlag {}
+impl EventFlag {
+    pub const EV_ADD: u16 = 0x0001;
+    pub const EV_DELETE: u16 = 0x0002;
+    pub const EV_ENABLE: u16 = 0x0004;
+    pub const EV_DISABLE: u16 = 0x0008;
+    pub const EV_RECEIPT: u16 = 0x0040;
+    pub const EV_ONESHOT: u16 = 0x0010;
+    pub const EV_CLEAR: u16 = 0x0020;
+    pub const EV_DISPATCH: u16 = 0x0080;
+    pub const EV_SYSFLAGS: u16 = 0xF000;
+    pub const EV_FLAG0: u16 = 0x1000;
+    pub const EV_FLAG1: u16 = 0x2000;
+    pub const EV_EOF: u16 = 0x8000;
+    pub const EV_ERROR: u16 = 0x4000;
 }
 
 #[derive(Debug)]
-#[repr(C)]
-pub enum FilterFlag {
-    NOTE_FFNOP = 0x00000000,
-    // NOTE_FFAND = 0x40000000,
-    // NOTE_FFOR = 0x80000000,
-    NOTE_FFCOPY = 0xc0000000,
-    // NOTE_FFCTRLMASK = 0xc0000000,
-    NOTE_FFLAGSMASK = 0x00ffffff,
-    NOTE_TRIGGER = 0x01000000,
-    // NOTE_LOWAT = 0x00000001,
-    // NOTE_FILE_POLL = 0x00000002,
-    NOTE_DELETE = 0x00000001,
-    NOTE_WRITE = 0x00000002,
-    NOTE_EXTEND = 0x00000004,
-    NOTE_ATTRIB = 0x00000008,
-    NOTE_LINK = 0x00000010,
-    NOTE_RENAME = 0x00000020,
-    NOTE_REVOKE = 0x00000040,
-    NOTE_OPEN = 0x00000080,
-    NOTE_CLOSE = 0x00000100,
-    NOTE_CLOSE_WRITE = 0x00000200,
-    NOTE_READ = 0x00000400,
-    NOTE_EXIT = 0x80000000,
-    NOTE_FORK = 0x40000000,
-    NOTE_EXEC = 0x20000000,
-    NOTE_PCTRLMASK = 0xf0000000,
-    NOTE_PDATAMASK = 0x000fffff,
-    // NOTE_TRACK = 0x00000001,
-    // NOTE_TRACKERR = 0x00000002,
-    // NOTE_CHILD = 0x00000004,
-    // NOTE_SECONDS = 0x00000001,
-    // NOTE_MSECONDS = 0x00000002,
-    // NOTE_USECONDS = 0x00000004,
-    // NOTE_NSECONDS = 0x00000008,
+pub struct FilterFlag {}
+impl FilterFlag {
+    pub const NOTE_TRIGGER: u32 = 0x01000000;
+    pub const NOTE_FFNOP: u32 = 0x00000000;
+    pub const NOTE_FFAND: u32 = 0x40000000;
+    pub const NOTE_FFOR: u32 = 0x80000000;
+    pub const NOTE_FFCOPY: u32 = 0xc0000000;
+    pub const NOTE_FFCTRLMASK: u32 = 0xc0000000;
+    pub const NOTE_FFLAGSMASK: u32 = 0x00ffffff;
+    pub const NOTE_LOWAT: u32 = 0x00000001;
+    pub const NOTE_DELETE: u32 = 0x00000001;
+    pub const NOTE_WRITE: u32 = 0x00000002;
+    pub const NOTE_EXTEND: u32 = 0x00000004;
+    pub const NOTE_ATTRIB: u32 = 0x00000008;
+    pub const NOTE_LINK: u32 = 0x00000010;
+    pub const NOTE_RENAME: u32 = 0x00000020;
+    pub const NOTE_REVOKE: u32 = 0x00000040;
+    pub const NOTE_NONE: u32 = 0x00000080;
+    pub const NOTE_EXIT: u32 = 0x80000000;
+    pub const NOTE_FORK: u32 = 0x40000000;
+    pub const NOTE_EXEC: u32 = 0x20000000;
+    pub const NOTE_REAP: u32 = 0x10000000;
+    pub const NOTE_SIGNAL: u32 = 0x08000000;
+    pub const NOTE_EXITSTATUS: u32 = 0x04000000;
+    pub const NOTE_RESOURCEEND: u32 = 0x02000000;
+    pub const NOTE_APPACTIVE: u32 = 0x00800000;
+    pub const NOTE_APPBACKGROUND: u32 = 0x00400000;
+    pub const NOTE_APPNONUI: u32 = 0x00200000;
+    pub const NOTE_APPINACTIVE: u32 = 0x00100000;
+    pub const NOTE_APPALLSTATES: u32 = 0x00f00000;
+    pub const NOTE_PDATAMASK: u32 = 0x000fffff;
+    pub const NOTE_PCTRLMASK: u32 = 0xfff00000;
+    pub const NOTE_EXIT_REPARENTED: u32 = 0x00080000;
+    pub const NOTE_VM_PRESSURE: u32 = 0x80000000;
+    pub const NOTE_VM_PRESSURE_TERMINATE: u32 = 0x40000000;
+    pub const NOTE_VM_PRESSURE_SUDDEN_TERMINATE: u32 = 0x20000000;
+    pub const NOTE_VM_ERROR: u32 = 0x10000000;
+    pub const NOTE_SECONDS: u32 = 0x00000001;
+    pub const NOTE_USECONDS: u32 = 0x00000002;
+    pub const NOTE_NSECONDS: u32 = 0x00000004;
+    pub const NOTE_ABSOLUTE: u32 = 0x00000008;
+    pub const NOTE_TRACK: u32 = 0x00000001;
+    pub const NOTE_TRACKERR: u32 = 0x00000002;
+    pub const NOTE_CHILD: u32 = 0x00000004;
 }
 
-// pub struct k_event {
-//     pub events: u32,
-//     pub data: u64,
-// }
-
-#[cfg(not(target_arch = "x86_64"))]
-#[repr(C)]
-pub struct KEvent {
-    pub ident: i32,
-    pub filter: EventFilter,
-    pub flags: EventFlag,
-    pub fflags: FilterFlag,
-    pub data: u64,
-    // pub udata: *mut c_void,
-}
-
-#[derive(Debug)]
-#[cfg(target_arch = "x86_64")]
-#[repr(C, packed)]
-pub struct KEvent {
-    pub ident: i32,
-    pub filter: EventFilter,
-    pub flags: EventFlag,
-    pub fflags: FilterFlag,
-    pub data: u64,
-    // pub udata: *mut c_void,
-}
-
-mod __glibc {
-    use sys::kqueue::*;
-
-    extern "C" {
-        pub fn kqueue() -> i32;
-
-        pub fn kevent(
-            kq: i32,
-            changelist: *mut KEvent,
-            nchanges: u32,
-            eventlist: *mut KEvent,
-            nevents: u32,
-            timeout: i32,
-        ) -> i32;
-
-        pub fn kqueue1(flags: i32) -> i32;
-    }
-}
-
-pub fn kqueue() -> i32 {
-    unsafe { __glibc::kqueue() }
-}
-
-pub fn kqueue1(flags: i32) -> i32 {
-    unsafe { __glibc::kqueue() }
+pub fn kqueue() -> RawFd {
+    unsafe { ffi::kqueue() }
 }
 
 pub fn kevent(
-    kq: i32,
-    changelist: &mut [KEvent],
-    nchanges: u32,
+    kq: RawFd,
+    changelist: &[KEvent],
     eventlist: &mut [KEvent],
-    nevents: u32,
-    timeout: i32,
-) -> i32 {
-    unsafe {
-        __glibc::kevent(
+    timeout_ms: usize,
+) -> usize {
+    // Convert ms to timespec
+    let timeout = timespec {
+        tv_sec: (timeout_ms / 1000) as i64,
+        tv_nsec: ((timeout_ms % 1000) * 1_000_000) as i64,
+    };
+
+    let res = unsafe {
+        ffi::kevent(
             kq,
-            changelist.as_mut_ptr(),
-            nchanges,
+            changelist.as_ptr(),
+            changelist.len() as i32,
             eventlist.as_mut_ptr(),
-            nevents,
-            timeout,
+            eventlist.len() as i32,
+            &timeout as *const timespec,
         )
-    }
+    };
+
+    return res as usize;
 }
 
-// pub fn ev_set(items: &mut Vec<kevent>) {}
+#[inline]
+pub fn ev_set(
+    ev: &mut KEvent,
+    ident: usize,
+    filter: EventFilter,
+    flags: u16,  // EventFlag,
+    fflags: u32, // FilterFlag,
+    udata: usize,
+) {
+    ev.ident = ident as usize;
+    ev.filter = filter;
+    ev.flags = flags;
+    ev.fflags = fflags;
+    ev.data = 0;
+    ev.udata = udata;
+}
