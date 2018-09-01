@@ -43,7 +43,7 @@ mod ffi {
         pub flags: u16,          // EventFlag,    // 2
         pub fflags: u32,         // FilterFlag,  // 4
         pub data: isize,         // 8
-        pub udata: usize,        // 8
+        pub udata: *mut usize,   // 8
     }
 
     // impl kevent {
@@ -92,7 +92,7 @@ impl EventLoop {
             flags: EventFlag::EV_ADD | EventFlag::EV_CLEAR | EventFlag::EV_RECEIPT, // 2
             fflags: 0,                                                              // 4
             data: 0,                                                                // 8
-            udata: id + 1,                                                          // 8
+            udata: ptr::null_mut(),                                                 // 8
         }];
 
         // need to create array of events
@@ -120,8 +120,8 @@ impl EventLoop {
                     ptr::null(),
                 )
             );
-
-            println!("{:?}", changes);
+            ::std::io::Error::from_raw_os_error(changes[0].data as i32);
+            // println!("{:?}", changes);
         };
     }
 
