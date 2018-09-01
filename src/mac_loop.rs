@@ -13,11 +13,12 @@ pub struct timespec {
 mod ffi {
     use super::timespec;
     use super::EventFilter;
+    use std::os::unix::io::RawFd;
 
     #[derive(Debug)]
     #[repr(C)]
     pub struct kevent {
-        pub ident: u32,          // 8
+        pub ident: RawFd,        // 8
         pub filter: EventFilter, // 2
         pub flags: u16,          // EventFlag,    // 2
         pub fflags: u32,         // FilterFlag,  // 4
@@ -65,15 +66,14 @@ impl EventLoop {
     }
 
     pub fn add_event(&mut self, ident: RawFd, id: usize) {
-        let event = KEvent {
-            ident: ident as u32,                                                    // 8
+        let mut changes = [KEvent {
+            ident: ident,                                                           // 8
             filter: EventFilter::EVFILT_READ,                                       // 2
             flags: EventFlag::EV_ADD | EventFlag::EV_CLEAR | EventFlag::EV_RECEIPT, // 2
             fflags: 0,                                                              // 4
             data: 0,                                                                // 8
             udata: id + 1,                                                          // 8
-        };
-
+        }];
         // need to create array of events
 
         // ev_set(
@@ -85,9 +85,21 @@ impl EventLoop {
         //     0,
         // );
 
-        self.change_events.insert(id, event);
+        // self.change_events.insert(id, event);
 
-        // unsafe { ffi::kevent(self.event_loop, &event, 1, ptr::null_mut(), 0, ptr::null()) };
+        unsafe {
+            println!(
+                "{}",
+                ffi::kevent(
+                    self.event_loop,
+                    changes.as_ptr(),
+                    changes.len() as i32,
+                    changes.as_mut_ptr(),
+                    changes.len() as i32,
+                    ptr::null(),
+                )
+            )
+        };
     }
 
     //     // pub fn remove_event(&self, event: RawFd) {
@@ -100,18 +112,18 @@ impl EventLoop {
 
     pub fn fetch_events(&mut self) {
         unsafe {
-            let call_events = ffi::kevent(
-                self.event_loop,
-                self.change_events.as_ptr(),
-                self.change_events.len() as i32,
-                self.events.as_mut_ptr(),
-                32,
-                ptr::null_mut(),
-            );
+            // let call_events = ffi::kevent(
+            //     self.event_loop,
+            //     self.change_events.as_ptr(),
+            //     self.change_events.len() as i32,
+            //     self.events.as_mut_ptr(),
+            //     32,
+            //     ptr::null_mut(),
+            // );
 
-            println!("{}", call_events);
+            // println!("{}", call_events);
 
-            self.events.set_len(call_events as usize);
+            // self.events.set_len(call_events as usize);
         };
     }
 }

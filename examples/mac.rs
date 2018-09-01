@@ -27,7 +27,7 @@ fn main() {
 
     loop {
         event_loop.fetch_events();
-        println!("{:?}", event_loop.events);
+        // println!("{:?}", event_loop.events);
         // for event in &event_loop.events {
         //     if event.data == 0 {
         //         let socket = listener.accept().unwrap().0;
