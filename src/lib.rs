@@ -1,3 +1,5 @@
+pub extern crate nix;
+
 // enable sys params temporary for tests
 pub mod sys;
 
