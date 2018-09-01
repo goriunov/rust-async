@@ -112,6 +112,16 @@ impl EventLoop {
 
     pub fn fetch_events(&mut self) {
         unsafe {
+            let cnt = ffi::kevent(
+                self.event_loop,
+                ptr::null(),
+                0,
+                self.events.as_mut_ptr(),
+                self.events.capacity() as i32,
+                ptr::null_mut(),
+            );
+
+            println!("{}", cnt);
             // let call_events = ffi::kevent(
             //     self.event_loop,
             //     self.change_events.as_ptr(),
