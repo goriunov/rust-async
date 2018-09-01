@@ -50,8 +50,6 @@ fn main() {
         //             Ok(0) => {
         //                 continue;
         //             }
-        //             Ok(n) => {
-        //                 socket.write(&buf).expect("Could not write");
         //                 // write back
         //             }
         //             Err(_e) => continue,

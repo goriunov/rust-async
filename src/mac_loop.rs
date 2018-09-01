@@ -86,16 +86,14 @@ impl EventLoop {
     }
 
     pub fn add_event(&mut self, ident: RawFd, id: usize) {
-        let events = KEvent {
-            ident: ident,                     // 8
-            filter: EventFilter::EVFILT_READ, // 2
-            flags: EventFlag::EV_ADD,         // 2
-            fflags: 0,                        // 4
-            data: 0,                          // 8
-            udata: 0,                         // 8
-        };
-
-        let changes = [events];
+        let mut changes = [KEvent {
+            ident: ident,                                                           // 8
+            filter: EventFilter::EVFILT_READ,                                       // 2
+            flags: EventFlag::EV_ADD | EventFlag::EV_CLEAR | EventFlag::EV_RECEIPT, // 2
+            fflags: 0,                                                              // 4
+            data: 0,                                                                // 8
+            udata: id + 1,                                                          // 8
+        }];
 
         // need to create array of events
 
@@ -111,28 +109,19 @@ impl EventLoop {
         // self.change_events.insert(id, event);
 
         unsafe {
-            let num = ffi::kevent(
-                self.event_loop,
-                changes.as_ptr(),
-                1,
-                ptr::null_mut(),
-                0,
-                ptr::null(),
-            );
-            // should be more then -1
-            println!("{}", num);
-
-            loop {
-                let cnt = ffi::kevent(
+            println!(
+                "{}",
+                ffi::kevent(
                     self.event_loop,
+                    changes.as_ptr(),
+                    changes.len() as i32,
+                    changes.as_mut_ptr(),
+                    changes.len() as i32,
                     ptr::null(),
-                    0,
-                    self.events.as_mut_ptr(),
-                    1,
-                    ptr::null(),
-                );
-                println!("{}", cnt);
-            }
+                )
+            );
+
+            println!("{:?}", changes);
         };
     }
 
