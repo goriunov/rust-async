@@ -1,8 +1,9 @@
 use libc;
+use std;
 use std::os::unix::io::{AsRawFd, RawFd};
 
 pub struct EventLoop {
-    events: Vec<libc::event>,
+    events: Vec<libc::kevent>,
     event_loop: RawFd,
 }
 
@@ -14,30 +15,45 @@ impl EventLoop {
         }
     }
 
-    pub fn add_event<T: AsRawFd>(&self, event: &T, id: usize) {
-        let changes = [
-            libc::kevent {
-                ident: event as libc::uintptr_t,
-                filter: libc::EVFILT_READ,
-                flags: libc::EV_ADD | libc::EV_CLEAR,
-                fflags: 0,
-                udata: id as *mut libc::c_void,
-            }
-        ]
+    pub fn add_event(&self, event: RawFd, id: usize) {
+        let changes = [libc::kevent {
+            ident: event as libc::uintptr_t,
+            filter: libc::EVFILT_READ,
+            flags: libc::EV_ADD | libc::EV_CLEAR,
+            fflags: 0,
+            data: 0,
+            udata: id as *mut libc::c_void,
+        }];
 
         unsafe {
-            libc::kevent(self.event_loop, changes.as_ptr() as *const libc::kevent, changes.len() as i32,  std::ptr::null_mut(), 0, std::ptr::null());
+            libc::kevent(
+                self.event_loop,
+                changes.as_ptr() as *const libc::kevent,
+                changes.len() as i32,
+                std::ptr::null_mut(),
+                0,
+                std::ptr::null(),
+            );
         }
     }
 
-    pub fn poll (&self) {
+    pub fn poll(&mut self) {
         unsafe {
-            let call_events = libc::kevent(self.event_loop,  std::ptr::null(), 0, self.events.as_mut_ptr() as *mut libc::kevent, self.events.capacity() ,std::ptr::null());
+            let call_events = libc::kevent(
+                self.event_loop,
+                std::ptr::null(),
+                0,
+                self.events.as_mut_ptr() as *mut libc::kevent,
+                self.events.capacity() as i32,
+                std::ptr::null(),
+            );
+
+            self.events.set_len(call_events as usize);
         }
     }
 
-    pub fn get_events(&self) {
-        &self.events;
+    pub fn get_events(&self) -> &Vec<libc::kevent> {
+        &self.events
     }
 }
 // use std::net::{SocketAddr, TcpListener, TcpStream};
