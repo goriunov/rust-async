@@ -62,7 +62,7 @@ let socket = net.connect(3000, '127.0.0.1');
 
 socket.on('connect', () => {
     console.log("open");
-    // socket.write(message)
+    socket.write(message)
 
     // setTimeout(() => {
     //     socket.write("Second Hello world")
@@ -75,7 +75,7 @@ socket.on('data', (data) => {
     num_msg++;
     // if (!ended) {
     if (socket.writable) {
-        // socket.write(message)
+        socket.write(message)
     }
     // setTimeout(() => {
 
