@@ -48,10 +48,14 @@ impl EventLoop {
         };
     }
 
-    pub fn fetch_events(&mut self) {
+    pub fn poll(&mut self) {
         unsafe {
             let call_events = libc::epoll_wait(self.event_loop, self.events.as_mut_ptr(), 32, -1);
             self.events.set_len(call_events as usize)
         };
+    }
+
+    pub fn get_events(&self) -> &Vec<libc::epoll_event> {
+        &self.events
     }
 }

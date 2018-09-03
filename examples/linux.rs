@@ -27,9 +27,9 @@ fn main() {
     event_loop.add_event(&listener, &mut new_even);
 
     loop {
-        event_loop.fetch_events();
+        event_loop.poll();
         // println!("New connection");
-        for event in &event_loop.events {
+        for event in event_loop.get_events() {
             if event.u64 == 0 {
                 let socket = listener.accept().unwrap().0;
                 socket.set_nonblocking(true).unwrap();
