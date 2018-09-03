@@ -1,7 +1,7 @@
 extern crate asyncio;
 
-use asyncio::event_loop::EventLoop;
-use asyncio::sys::epoll::*;
+use asyncio::event_loop::*;
+// use asyncio::sys::epoll::*;
 
 use std::io::*;
 use std::net::{SocketAddr, TcpListener, TcpStream};
