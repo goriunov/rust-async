@@ -17,7 +17,7 @@ fn main() {
 
     let mut event_loop = EventLoop::new(100);
 
-    event_loop.add_event(listener.as_raw_fd(), count);
+    event_loop.add_event(&listener, count);
 
     loop {
         event_loop.poll();

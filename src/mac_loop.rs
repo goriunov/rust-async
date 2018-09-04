@@ -20,7 +20,7 @@ impl EventLoop {
         }
     }
 
-    pub fn add_event <T: AsRawFd>(&self, event: T, id: usize) {
+    pub fn add_event<T: AsRawFd>(&self, event: &T, id: usize) {
         let changes = [libc::kevent {
             ident: event.as_raw_fd() as libc::uintptr_t,
             filter: libc::EVFILT_READ,
@@ -43,7 +43,7 @@ impl EventLoop {
     }
 
     // need to fix
-    pub fn poll(&mut self) -> Vec<Event> {
+    pub fn poll(&mut self) {
         unsafe {
             let call_events = libc::kevent(
                 self.event_loop,
@@ -56,13 +56,13 @@ impl EventLoop {
 
             self.events.set_len(call_events as usize);
 
-            let mut ready_events = Vec::with_capacity(call_events);
-            for (i, event) in self.events {
-                ready_events.insert(i, Event::new(event.udata))
-            }
+            // let mut ready_events = Vec::with_capacity(call_events);
+            // for (i, event) in self.events {
+            //     ready_events.insert(i, Event::new(event.udata))
+            // }
 
-            ready_events
-        }
+            // ready_events
+        };
     }
 
     pub fn get_events(&self) -> &Vec<libc::kevent> {

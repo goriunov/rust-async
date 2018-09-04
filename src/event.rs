@@ -21,7 +21,7 @@ impl Event {
         self.token.0
     }
 
-    pub fn get_filters(&self) -> Filter {
-        self.filters
-    }
+    // pub fn get_filters(&self) -> Filter {
+    //     self.filters
+    // }
 }
