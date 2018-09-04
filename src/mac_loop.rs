@@ -1,3 +1,4 @@
+use event::Event;
 use libc;
 use std;
 use std::os::unix::io::{AsRawFd, RawFd};
@@ -5,6 +6,10 @@ use std::os::unix::io::{AsRawFd, RawFd};
 pub struct EventLoop {
     events: Vec<libc::kevent>,
     event_loop: RawFd,
+}
+
+fn ev_set() {
+    // need to add functionality
 }
 
 impl EventLoop {
@@ -15,9 +20,9 @@ impl EventLoop {
         }
     }
 
-    pub fn add_event(&self, event: RawFd, id: usize) {
+    pub fn add_event <T: AsRawFd>(&self, event: T, id: usize) {
         let changes = [libc::kevent {
-            ident: event as libc::uintptr_t,
+            ident: event.as_raw_fd() as libc::uintptr_t,
             filter: libc::EVFILT_READ,
             flags: libc::EV_ADD | libc::EV_CLEAR,
             fflags: 0,
@@ -37,7 +42,8 @@ impl EventLoop {
         }
     }
 
-    pub fn poll(&mut self) {
+    // need to fix
+    pub fn poll(&mut self) -> Vec<Event> {
         unsafe {
             let call_events = libc::kevent(
                 self.event_loop,
@@ -49,6 +55,13 @@ impl EventLoop {
             );
 
             self.events.set_len(call_events as usize);
+
+            let mut ready_events = Vec::with_capacity(call_events);
+            for (i, event) in self.events {
+                ready_events.insert(i, Event::new(event.udata))
+            }
+
+            ready_events
         }
     }
 

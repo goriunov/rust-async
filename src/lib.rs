@@ -1,5 +1,7 @@
 pub extern crate libc;
 
+mod event;
+
 #[cfg(target_os = "linux")]
 mod linux_loop;
 
@@ -10,6 +12,9 @@ mod windows_loop;
 mod mac_loop;
 
 pub mod event_loop {
+    pub use event::Event;
+    pub use event::Token;
+
     #[cfg(target_os = "linux")]
     pub use linux_loop::*;
 
