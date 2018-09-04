@@ -1,27 +1,66 @@
-use std::os::unix::io::{AsRawFd, RawFd};
+use std;
 
-pub struct Token(pub usize);
+#[derive(Copy, Clone, PartialEq)]
+pub struct Interest(pub usize);
 
-pub enum Filter {
-    Read,
-    Write,
+// pub enum Filter {
+//     Read,
+//     Write,
+// }
+
+impl std::ops::BitOr for Interest {
+    type Output = Interest;
+
+    #[inline]
+    fn bitor(self, rhs: Self) -> Self {
+        Interest(self.0 | rhs.0)
+    }
+}
+
+impl std::ops::BitAnd for Interest {
+    type Output = Interest;
+
+    #[inline]
+    fn bitand(self, rhs: Self) -> Self {
+        Interest(self.0 & rhs.0)
+    }
+}
+
+impl Interest {
+    #[inline]
+    pub fn read() -> Interest {
+        Interest(0b00001)
+    }
+
+    #[inline]
+    pub fn write() -> Interest {
+        Interest(0b00010)
+    }
+
+    #[inline]
+    pub fn contains(&self, other: Interest) -> bool {
+        (*self & other) == other
+    }
 }
 
 pub struct Event {
-    token: Token,
-    filters: Filter,
+    token: usize,
+    filters: Interest,
 }
 
 impl Event {
-    pub fn new(token: Token, filters: Filter) -> Event {
+    #[inline]
+    pub fn new(token: usize, filters: Interest) -> Event {
         Event { token, filters }
     }
 
-    pub fn get_token_value(&self) -> usize {
-        self.token.0
+    #[inline]
+    pub fn get_token(&self) -> usize {
+        self.token
     }
 
-    // pub fn get_filters(&self) -> Filter {
-    //     self.filters
-    // }
+    #[inline]
+    pub fn get_filters(&self) -> Interest {
+        self.filters
+    }
 }

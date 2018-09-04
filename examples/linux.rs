@@ -1,7 +1,6 @@
 extern crate asyncio;
 
 use asyncio::event_loop::*;
-use asyncio::libc;
 
 use std::io::*;
 use std::net::{TcpListener, TcpStream};
@@ -15,33 +14,23 @@ fn main() {
     let mut count = 0;
     let mut existing_events: Vec<TcpStream> = Vec::with_capacity(32);
 
-    let mut new_even = libc::epoll_event {
-        events: libc::EPOLLIN as u32 | libc::EPOLLOUT as u32 | libc::EPOLLET as u32,
-        u64: count,
-    };
-
     let mut event_loop = EventLoop::new(100);
 
-    event_loop.add_event(&listener, &mut new_even);
+    event_loop.add_event(&listener, count, Interest::read());
 
     loop {
         let events = event_loop.poll();
-        // println!("New connection");
+        //     // println!("New connection");
         for event in events {
-            let token = event.get_token_value();
+            let token = event.get_token();
             if token == 0 {
                 let socket = listener.accept().unwrap().0;
                 socket.set_nonblocking(true).unwrap();
                 socket.set_nodelay(true).unwrap();
                 count += 1;
 
-                let mut new_even = libc::epoll_event {
-                    events: libc::EPOLLIN as u32 | libc::EPOLLET as u32 | libc::EPOLLHUP as u32,
-                    u64: count,
-                };
-
-                event_loop.add_event(&socket, &mut new_even);
-                existing_events.insert((count - 1) as usize, socket);
+                event_loop.add_event(&socket, count, Interest::read() | Interest::write());
+                existing_events.insert(count - 1, socket);
             } else {
                 let mut socket = existing_events.get_mut(token - 1).unwrap();
                 let mut buf = [0; 1938];

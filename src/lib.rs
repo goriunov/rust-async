@@ -13,7 +13,7 @@ mod mac_loop;
 
 pub mod event_loop {
     pub use event::Event;
-    pub use event::Token;
+    pub use event::Interest;
 
     #[cfg(target_os = "linux")]
     pub use linux_loop::*;
