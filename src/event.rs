@@ -1,12 +1,7 @@
 use std;
 
-#[derive(Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Interest(pub usize);
-
-// pub enum Filter {
-//     Read,
-//     Write,
-// }
 
 impl std::ops::BitOr for Interest {
     type Output = Interest;
@@ -43,6 +38,7 @@ impl Interest {
     }
 }
 
+#[derive(Debug)]
 pub struct Event {
     token: usize,
     filters: Interest,
@@ -60,7 +56,12 @@ impl Event {
     }
 
     #[inline]
-    pub fn get_filters(&self) -> Interest {
-        self.filters
+    pub fn is_readable(&self) -> bool {
+        self.filters.contains(Interest::read())
+    }
+
+    #[inline]
+    pub fn is_writable(&self) -> bool {
+        self.filters.contains(Interest::write())
     }
 }

@@ -16,36 +16,40 @@ fn main() {
 
     let mut event_loop = EventLoop::new(100);
 
-    event_loop.add_event(&listener, count, Interest::read());
-
+    event_loop.add(&listener, count, Interest::read());
+    let mut events = Vec::with_capacity(100);
     loop {
-        let events = event_loop.poll();
-        //     // println!("New connection");
-        for event in events {
+        event_loop.poll(&mut events);
+
+        for event in &events {
             let token = event.get_token();
+
             if token == 0 {
                 let socket = listener.accept().unwrap().0;
                 socket.set_nonblocking(true).unwrap();
                 socket.set_nodelay(true).unwrap();
                 count += 1;
 
-                event_loop.add_event(&socket, count, Interest::read() | Interest::write());
+                event_loop.add(&socket, count, Interest::read() | Interest::write());
                 existing_events.insert(count - 1, socket);
             } else {
-                let mut socket = existing_events.get_mut(token - 1).unwrap();
-                let mut buf = [0; 1938];
-
-                // println!("Got buff");
-                match socket.read(&mut buf) {
-                    Ok(0) => {
-                        continue;
-                    }
-                    Ok(_n) => {
-                        socket.write(&buf).expect("Could not write");
-                        // write back
-                    }
-                    Err(_e) => continue,
-                };
+                if event.is_readable() {
+                    let mut socket = existing_events.get_mut(token - 1).unwrap();
+                    let mut buf = [0; 1938];
+                    match socket.read(&mut buf) {
+                        Ok(0) => {
+                            println!("Socket closed");
+                            // println!("{:?}", existing_events.);
+                            // event_loop.remove(socket);
+                            continue;
+                        }
+                        Ok(_n) => socket.write(&buf).expect("Could not write"),
+                        Err(e) => {
+                            println!("{:?}", e);
+                            continue;
+                        }
+                    };
+                }
             }
         }
     }

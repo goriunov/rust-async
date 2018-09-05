@@ -24,14 +24,19 @@ fn parse_from_interests(filters: Interest) -> u32 {
     kind as u32
 }
 
-fn parse_to_interests(epoll: u32) -> Interest {
-    let mut kind = 0;
-    // need to implement bak transform
-    // if epoll.contains(libc::EPOLLIN) {
-    //     kind |= 0b00001
-    // }
+#[inline]
+fn parse_to_interests(epoll: i32) -> Interest {
+    let mut kind = Interest(0);
 
-    Interest(kind)
+    if (epoll & libc::EPOLLIN) != 0 {
+        kind = kind | Interest::read();
+    }
+
+    if (epoll & libc::EPOLLOUT) != 0 {
+        kind = kind | Interest::write();
+    }
+
+    kind
 }
 
 impl EventLoop {
@@ -44,10 +49,9 @@ impl EventLoop {
     }
 
     #[inline]
-    pub fn add_event<T: AsRawFd>(&self, registrar: &T, token: usize, interests: Interest) {
-        // need to fiz get filters
+    pub fn add<T: AsRawFd>(&self, registrar: &T, token: usize, interests: Interest) {
         let mut epoll_event = libc::epoll_event {
-            events: parse_from_interests(interests), // need to create anothe function to pars events
+            events: parse_from_interests(interests),
             u64: token as u64,
         };
 
@@ -62,31 +66,38 @@ impl EventLoop {
     }
 
     #[inline]
-    pub fn remove_event<T: AsRawFd>(&self, event: &T, conf: &mut libc::epoll_event) {
+    pub fn remove<T: AsRawFd>(&self, registrar: &T) {
+        let mut epoll_event = libc::epoll_event { events: 0, u64: 0 };
+
         unsafe {
             libc::epoll_ctl(
                 self.event_loop,
                 libc::EPOLL_CTL_DEL,
-                event.as_raw_fd(),
-                conf,
+                registrar.as_raw_fd(),
+                &mut epoll_event,
             )
         };
     }
 
     #[inline]
-    pub fn modify_event<T: AsRawFd>(&self, event: &T, conf: &mut libc::epoll_event) {
+    pub fn modify<T: AsRawFd>(&self, registrar: &T, token: usize, interests: Interest) {
+        let mut epoll_event = libc::epoll_event {
+            events: parse_from_interests(interests),
+            u64: token as u64,
+        };
+
         unsafe {
             libc::epoll_ctl(
                 self.event_loop,
                 libc::EPOLL_CTL_MOD,
-                event.as_raw_fd(),
-                conf,
+                registrar.as_raw_fd(),
+                &mut epoll_event,
             )
         };
     }
 
     #[inline]
-    pub fn poll(&mut self) -> Vec<Event> {
+    pub fn poll(&mut self, events_vec: &mut Vec<Event>) {
         unsafe {
             let call_events = libc::epoll_wait(
                 self.event_loop,
@@ -95,16 +106,18 @@ impl EventLoop {
                 -1,
             ) as usize;
 
+            events_vec.set_len(0);
             self.events.set_len(call_events);
 
-            // create return event properly
-            let mut ready_events = Vec::with_capacity(call_events);
-
             for i in 0..call_events {
-                ready_events.insert(i, Event::new(self.events[i].u64 as usize, Interest::read()))
+                events_vec.insert(
+                    i,
+                    Event::new(
+                        self.events[i].u64 as usize,
+                        parse_to_interests(self.events[i].events as i32),
+                    ),
+                )
             }
-
-            ready_events
         }
     }
 }
