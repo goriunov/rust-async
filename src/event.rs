@@ -1,5 +1,13 @@
 use std;
 
+pub struct PollOpt {}
+
+impl PollOpt {
+    pub const EDGE: Interest = Interest(0b0000001);
+    pub const LEVEL: Interest = Interest(0b0000010);
+    pub const ONESHOT: Interest = Interest(0b0000100);
+}
+
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Interest(pub usize);
 
@@ -22,15 +30,25 @@ impl std::ops::BitAnd for Interest {
 }
 
 impl Interest {
-    #[inline]
-    pub fn read() -> Interest {
-        Interest(0b00001)
-    }
+    // 0b0000001
+    // 0b0000010
+    // 0b0000100
+    // 0b0001000
+    // 0b0010000
+    // 0b0100000
+    // 0b1000000
 
-    #[inline]
-    pub fn write() -> Interest {
-        Interest(0b00010)
-    }
+    // 0b0100
+    // 0b0010
+    // 0b0001
+    // 0b0100000
+    // 0b00001
+    // 0b00010
+    // 0b00100
+    pub const HUP: Interest = Interest(0b0001000);
+    pub const READ: Interest = Interest(0b0010000);
+    pub const WRITE: Interest = Interest(0b0100000);
+    pub const ERROR: Interest = Interest(0b1000000);
 
     #[inline]
     pub fn contains(&self, other: Interest) -> bool {
@@ -51,17 +69,26 @@ impl Event {
     }
 
     #[inline]
-    pub fn get_token(&self) -> usize {
+    pub fn token(&self) -> usize {
         self.token
+    }
+
+    pub fn is_hup(&self) -> bool {
+        self.filters.contains(Interest::HUP)
+    }
+
+    #[inline]
+    pub fn is_error(&self) -> bool {
+        self.filters.contains(Interest::ERROR)
     }
 
     #[inline]
     pub fn is_readable(&self) -> bool {
-        self.filters.contains(Interest::read())
+        self.filters.contains(Interest::READ)
     }
 
     #[inline]
     pub fn is_writable(&self) -> bool {
-        self.filters.contains(Interest::write())
+        self.filters.contains(Interest::WRITE)
     }
 }

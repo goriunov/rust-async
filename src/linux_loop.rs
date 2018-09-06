@@ -3,6 +3,7 @@ use std::os::unix::io::AsRawFd;
 
 use event::Event;
 use event::Interest;
+use event::PollOpt;
 
 pub struct EventLoop {
     pub events: Vec<libc::epoll_event>,
@@ -11,14 +12,30 @@ pub struct EventLoop {
 
 #[inline]
 fn parse_from_interests(filters: Interest) -> u32 {
-    let mut kind = libc::EPOLLET;
+    let mut kind = 0;
 
-    if filters.contains(Interest::read()) {
+    if filters.contains(Interest::READ) {
         kind |= libc::EPOLLIN;
     }
 
-    if filters.contains(Interest::write()) {
+    if filters.contains(Interest::WRITE) {
         kind |= libc::EPOLLOUT;
+    }
+
+    if filters.contains(Interest::HUP) {
+        kind |= libc::EPOLLRDHUP;
+    }
+
+    if filters.contains(PollOpt::EDGE) {
+        kind |= libc::EPOLLET;
+    }
+
+    if filters.contains(PollOpt::ONESHOT) {
+        kind |= libc::EPOLLONESHOT;
+    }
+
+    if filters.contains(PollOpt::LEVEL) {
+        kind &= !libc::EPOLLET;
     }
 
     kind as u32
@@ -29,11 +46,19 @@ fn parse_to_interests(epoll: i32) -> Interest {
     let mut kind = Interest(0);
 
     if (epoll & libc::EPOLLIN) != 0 {
-        kind = kind | Interest::read();
+        kind = kind | Interest::READ;
     }
 
     if (epoll & libc::EPOLLOUT) != 0 {
-        kind = kind | Interest::write();
+        kind = kind | Interest::WRITE;
+    }
+
+    if (epoll & libc::EPOLLERR) != 0 {
+        kind = kind | Interest::ERROR;
+    }
+
+    if (epoll & libc::EPOLLRDHUP) != 0 || (epoll & libc::EPOLLHUP) != 0 {
+        kind = kind | Interest::HUP;
     }
 
     kind
@@ -49,9 +74,15 @@ impl EventLoop {
     }
 
     #[inline]
-    pub fn add<T: AsRawFd>(&self, registrar: &T, token: usize, interests: Interest) {
+    pub fn add<T: AsRawFd>(
+        &self,
+        registrar: &T,
+        token: usize,
+        interests: Interest,
+        poll_op: Interest,
+    ) {
         let mut epoll_event = libc::epoll_event {
-            events: parse_from_interests(interests),
+            events: parse_from_interests(interests | poll_op),
             u64: token as u64,
         };
 
@@ -80,9 +111,15 @@ impl EventLoop {
     }
 
     #[inline]
-    pub fn modify<T: AsRawFd>(&self, registrar: &T, token: usize, interests: Interest) {
+    pub fn modify<T: AsRawFd>(
+        &self,
+        registrar: &T,
+        token: usize,
+        interests: Interest,
+        poll_op: Interest,
+    ) {
         let mut epoll_event = libc::epoll_event {
-            events: parse_from_interests(interests),
+            events: parse_from_interests(interests | poll_op),
             u64: token as u64,
         };
 

@@ -14,6 +14,7 @@ mod mac_loop;
 pub mod event_loop {
     pub use event::Event;
     pub use event::Interest;
+    pub use event::PollOpt;
 
     #[cfg(target_os = "linux")]
     pub use linux_loop::*;
