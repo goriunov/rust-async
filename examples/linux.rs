@@ -17,9 +17,11 @@ fn main() {
     let mut event_loop = EventLoop::new(100);
 
     event_loop.add(&listener, count, Interest::READ, PollOpt::EDGE);
+    // event_loop.remove(&listener);
     let mut events = Vec::with_capacity(100);
     loop {
         event_loop.poll(&mut events);
+        // println!("Connection",);
 
         for event in &events {
             let token = event.token();
@@ -43,23 +45,23 @@ fn main() {
                     println!("Got hup");
                 }
 
-                if event.is_readable() {
-                    let mut socket = existing_events.get_mut(token - 1).unwrap();
-                    let mut buf = [0; 1938];
-                    match socket.read(&mut buf) {
-                        Ok(0) => {
-                            println!("Socket closed");
-                            // println!("{:?}", existing_events.);
-                            event_loop.remove(socket);
-                            continue;
-                        }
-                        Ok(_n) => socket.write(&buf).expect("Could not write"),
-                        Err(e) => {
-                            println!("{:?}", e);
-                            continue;
-                        }
-                    };
-                }
+                // if event.is_readable() {
+                let mut socket = existing_events.get_mut(token - 1).unwrap();
+                let mut buf = [0; 1938];
+                match socket.read(&mut buf) {
+                    Ok(0) => {
+                        println!("Socket closed");
+                        // println!("{:?}", existing_events.);
+                        event_loop.remove(socket);
+                        continue;
+                    }
+                    Ok(_n) => socket.write(&buf).expect("Could not write"),
+                    Err(e) => {
+                        // println!("{:?}", e);
+                        continue;
+                    }
+                };
+                // }
             }
         }
     }
