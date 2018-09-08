@@ -21,12 +21,12 @@ Rc8rghWRhEA9cVzPasoF4zmPA8xff2yphui2o5YQJUlk4H8VQK7pZkrYorNsrIiORc8rghWRhEA9cVzP
 2yphui2o5YQJUlk4H8VQK7pZkrYorNsrIiORc8rghWRhEA9cVzPasoF4zmPA8xff2yphui2o5YQJUlk4H8VQK7pZkrYorNsrIiORc8rghWRhEA9cVzP
 asoF4zmPA8xff2yphui2o5YQJUlk4H8VQK7pZkrYorNsrIiORc8rghWRhEA9cVzPasoF4zmPA8xff2yphui2o5YQJUlk4H8VQK7pZkrYorNsrIiO:`);
 
-if (cluster.isMaster) {
-    for (let i = 0; i < 10; i++) {
-        cluster.fork();
-    }
-    return
-}
+// if (cluster.isMaster) {
+//     for (let i = 0; i < 10; i++) {
+//         cluster.fork();
+//     }
+//     return
+// }
 
 // console.log(message.length)
 // let socket = net.connect(3000, '127.0.0.1');
@@ -75,13 +75,14 @@ socket.on('data', (data) => {
     num_msg++;
     // if (!ended) {
     if (socket.writable) {
-        socket.write(message)
+        setTimeout(() => socket.write(message), 5000);
+
     }
     // setTimeout(() => {
 
     // }, 5000)
     // }
-    // console.log("I am hrere:", data.toString() + '\n');
+    console.log("I am hrere:", num_msg, data.toString() + '\n');
 });
 
 socket.on('error', () => { })

@@ -21,7 +21,7 @@ fn main() {
     let mut events = Vec::with_capacity(100);
     loop {
         event_loop.poll(&mut events);
-        // println!("Connection",);
+        println!("Connection, {:?}, {}", events, events[0].is_readable());
 
         for event in &events {
             let token = event.token();
@@ -55,9 +55,11 @@ fn main() {
                         event_loop.remove(socket);
                         continue;
                     }
-                    Ok(_n) => socket.write(&buf).expect("Could not write"),
+                    Ok(_n) => {
+                        socket.write(&buf).expect("Could not write");
+                    }
                     Err(e) => {
-                        // println!("{:?}", e);
+                        println!("{:?}", e);
                         continue;
                     }
                 };

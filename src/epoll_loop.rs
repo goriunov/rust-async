@@ -143,7 +143,7 @@ impl EventLoop {
                 -1,
             ) as usize;
 
-            events_vec.set_len(0);
+            events_vec.clear();
             self.events.set_len(call_events);
 
             for i in 0..call_events {

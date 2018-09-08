@@ -6,6 +6,7 @@ use event::Interest;
 use event::PollOpt;
 
 use std::os::unix::io::{AsRawFd, RawFd};
+// Need to add more platforms
 
 pub struct EventLoop {
     events: Vec<libc::kevent>,
@@ -23,6 +24,34 @@ macro_rules! ev_set {
             udata: $data as *mut libc::c_void,
         }
     };
+}
+
+// this function need some fixes :)
+fn parse_to_interests(kind: Interest, event: libc::kevent) -> Interest {
+    let mut kind = kind;
+
+    if (event.flags & libc::EV_ERROR) != 0 {
+        kind = kind | Interest::ERROR;
+    }
+
+    if event.filter == libc::EVFILT_READ {
+        kind = kind | Interest::READ;
+    }
+
+    if event.filter == libc::EVFILT_WRITE {
+        kind = kind | Interest::WRITE;
+    }
+
+    if (event.flags & libc::EV_EOF) != 0 {
+        kind = kind | Interest::HUP;
+
+        // need to handle error need to check if it is fine to add vent twice
+        if event.fflags != 0 {
+            kind = kind | Interest::ERROR;
+        }
+    }
+
+    kind
 }
 
 impl EventLoop {
@@ -60,7 +89,6 @@ impl EventLoop {
             false => libc::EV_DELETE,
         };
 
-        // need to handle different events
         let changes = [
             ev_set!(registrar.as_raw_fd(), libc::EVFILT_READ, flags | r, token),
             ev_set!(registrar.as_raw_fd(), libc::EVFILT_WRITE, flags | w, token),
@@ -121,7 +149,7 @@ impl EventLoop {
                 std::ptr::null(),
             ) as usize;
 
-            events_vec.set_len(0);
+            events_vec.clear();
             self.events.set_len(call_events);
 
             for i in 0..call_events {
@@ -129,8 +157,7 @@ impl EventLoop {
                     i,
                     Event::new(
                         self.events[i].udata as usize,
-                        Interest::READ // need to fix this part
-                        // parse_to_interests(self.events[i].events as i32),
+                        parse_to_interests(Interest(0), self.events[i]),
                     ),
                 )
             }

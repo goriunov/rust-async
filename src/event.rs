@@ -30,21 +30,6 @@ impl std::ops::BitAnd for Interest {
 }
 
 impl Interest {
-    // 0b0000001
-    // 0b0000010
-    // 0b0000100
-    // 0b0001000
-    // 0b0010000
-    // 0b0100000
-    // 0b1000000
-
-    // 0b0100
-    // 0b0010
-    // 0b0001
-    // 0b0100000
-    // 0b00001
-    // 0b00010
-    // 0b00100
     pub const HUP: Interest = Interest(0b0001000);
     pub const READ: Interest = Interest(0b0010000);
     pub const WRITE: Interest = Interest(0b0100000);
