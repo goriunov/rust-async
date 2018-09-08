@@ -135,7 +135,15 @@ impl Poll {
         }
     }
 
-    // add modify events
+    pub fn modify<T: AsRawFd>(
+        &self,
+        registrar: &T,
+        token: usize,
+        interests: Interest,
+        poll_op: Interest,
+    ) {
+        self.add(registrar, token, interests, poll_op)
+    }
 
     // need to fix
     pub fn poll(&mut self, events_vec: &mut Vec<Event>) {

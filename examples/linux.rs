@@ -14,17 +14,17 @@ fn main() {
     let mut count = 0;
     let mut existing_events: Vec<TcpStream> = Vec::with_capacity(32);
 
-    let mut event_loop = Poll::new(100);
+    let mut poll = Poll::new(100);
 
-    event_loop.add(&listener, count, Interest::READ, PollOpt::EDGE);
+    poll.add(&listener, count, Interest::READ, PollOpt::EDGE);
     // event_loop.remove(&listener);
     let mut events = Vec::with_capacity(100);
     loop {
-        event_loop.poll(&mut events);
+        poll.poll(&mut events);
         println!("Connection, {:?}, {}", events, events[0].is_readable());
 
         for event in &events {
-            let token = event.token();
+            let mut token = event.token();
 
             if token == 0 {
                 let socket = listener.accept().unwrap().0;
@@ -32,7 +32,7 @@ fn main() {
                 socket.set_nodelay(true).unwrap();
                 count += 1;
 
-                event_loop.add(
+                poll.add(
                     &socket,
                     count,
                     Interest::READ | Interest::WRITE,
@@ -45,17 +45,29 @@ fn main() {
                     println!("Got hup");
                 }
 
+                let mut another_token = token.clone();
+                if another_token > 1 {
+                    another_token = 1;
+                }
+
                 // if event.is_readable() {
-                let mut socket = existing_events.get_mut(token - 1).unwrap();
+                let mut socket = existing_events.get_mut(another_token - 1).unwrap();
                 let mut buf = [0; 1938];
                 match socket.read(&mut buf) {
                     Ok(0) => {
                         println!("Socket closed");
                         // println!("{:?}", existing_events.);
-                        event_loop.remove(socket);
+                        poll.remove(socket);
                         continue;
                     }
                     Ok(_n) => {
+                        poll.modify(
+                            socket,
+                            token + 1,
+                            Interest::READ | Interest::WRITE,
+                            PollOpt::EDGE,
+                        );
+                        // existing_events.insert(token, socket);
                         socket.write(&buf).expect("Could not write");
                     }
                     Err(e) => {
