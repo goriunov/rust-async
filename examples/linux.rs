@@ -1,6 +1,6 @@
 extern crate asyncio;
 
-use asyncio::event_loop::*;
+use asyncio::*;
 
 use std::io::*;
 use std::net::{TcpListener, TcpStream};
@@ -14,7 +14,7 @@ fn main() {
     let mut count = 0;
     let mut existing_events: Vec<TcpStream> = Vec::with_capacity(32);
 
-    let mut event_loop = EventLoop::new(100);
+    let mut event_loop = Poll::new(100);
 
     event_loop.add(&listener, count, Interest::READ, PollOpt::EDGE);
     // event_loop.remove(&listener);

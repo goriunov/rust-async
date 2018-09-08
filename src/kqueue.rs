@@ -8,7 +8,7 @@ use event::PollOpt;
 use std::os::unix::io::{AsRawFd, RawFd};
 // Need to add more platforms
 
-pub struct EventLoop {
+pub struct Poll {
     events: Vec<libc::kevent>,
     event_loop: RawFd,
 }
@@ -54,9 +54,9 @@ fn parse_to_interests(kind: Interest, event: libc::kevent) -> Interest {
     kind
 }
 
-impl EventLoop {
-    pub fn new(capacity: usize) -> EventLoop {
-        EventLoop {
+impl Poll {
+    pub fn new(capacity: usize) -> Poll {
+        Poll {
             events: Vec::with_capacity(capacity),
             event_loop: unsafe { libc::kqueue() },
         }

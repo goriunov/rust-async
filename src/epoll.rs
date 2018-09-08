@@ -5,7 +5,7 @@ use event::Event;
 use event::Interest;
 use event::PollOpt;
 
-pub struct EventLoop {
+pub struct Poll {
     pub events: Vec<libc::epoll_event>,
     event_loop: i32,
 }
@@ -64,10 +64,10 @@ fn parse_to_interests(epoll: i32) -> Interest {
     kind
 }
 
-impl EventLoop {
+impl Poll {
     #[inline]
-    pub fn new(capacity: usize) -> EventLoop {
-        EventLoop {
+    pub fn new(capacity: usize) -> Poll {
+        Poll {
             events: Vec::with_capacity(capacity),
             event_loop: unsafe { libc::epoll_create1(0) },
         }
