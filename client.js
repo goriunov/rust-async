@@ -75,14 +75,14 @@ socket.on('data', (data) => {
     num_msg++;
     // if (!ended) {
     if (socket.writable) {
-        setTimeout(() => socket.write(message), 5000);
-
+        // setTimeout(() => socket.write(message), 5000);
+        socket.write(message)
     }
     // setTimeout(() => {
 
     // }, 5000)
     // }
-    console.log("I am hrere:", num_msg, data.toString() + '\n');
+    // console.log("I am hrere:", num_msg, data.toString() + '\n');
 });
 
 socket.on('error', () => { })

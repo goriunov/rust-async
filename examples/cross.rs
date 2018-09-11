@@ -21,7 +21,7 @@ fn main() {
     let mut events = Vec::with_capacity(100);
     loop {
         poll.poll(&mut events);
-        println!("Connection, {:?}, {}", events, events[0].is_readable());
+        // println!("Connection, {:?}, {}", events, events[0].is_readable());
 
         for event in &events {
             let mut token = event.token();
@@ -61,17 +61,17 @@ fn main() {
                         continue;
                     }
                     Ok(_n) => {
-                        poll.modify(
-                            socket,
-                            token + 1,
-                            Interest::READ | Interest::WRITE,
-                            PollOpt::EDGE,
-                        );
+                        // poll.modify(
+                        //     socket,
+                        //     token + 1,
+                        //     Interest::READ | Interest::WRITE,
+                        //     PollOpt::EDGE,
+                        // );
                         // existing_events.insert(token, socket);
                         socket.write(&buf).expect("Could not write");
                     }
                     Err(e) => {
-                        println!("{:?}", e);
+                        // println!("{:?}", e);
                         continue;
                     }
                 };
